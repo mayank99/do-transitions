@@ -42,7 +42,7 @@
         });
       }
 
-      function doTransition(elements, mutateDom) {
+      async function doTransition(elements, mutateDom) {
         if (prefersReducedMotion()) {
           mutateDom();
         } else if (!document.startViewTransition) {
