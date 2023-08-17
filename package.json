@@ -1,9 +1,10 @@
 {
+  "name": "whatever",
   "main": "index.html",
   "scripts": {
     "start": "serve"
   },
   "devDependencies": {
-    "serve": "^14.0.0"
+    "serve": "^11.2.0"
   }
 }
