@@ -51,7 +51,10 @@
           elements.forEach((el, index) =>
             el.style.setProperty("view-transition-name", `bofa-${index}`)
           );
-          document.startViewTransition(() => mutateDom());
+          await document.startViewTransition(() => mutateDom()).finished;
+          elements.forEach((el) =>
+            el.style.setProperty("view-transition-name", "")
+          );
         }
       }
 
