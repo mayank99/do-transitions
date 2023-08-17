@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>do-transitions</title>
+  </head>
+  <body>
+    <list->
+      <item-><span>1</span> <button>up</button> <button>down</button></item->
+      <item-><span>2</span> <button>up</button> <button>down</button></item->
+      <item-><span>3</span> <button>up</button> <button>down</button></item->
+      <item-><span>4</span> <button>up</button> <button>down</button></item->
+      <item-><span>5</span> <button>up</button> <button>down</button></item->
+    </list->
+
+    <script type="module">
+      const prefersReducedMotion = () =>
+        matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      async function flip(elements, mutateDom) {
+        const firsts = elements.map((el) => el.getBoundingClientRect());
+
+        mutateDom();
+
+        elements.forEach((element, index) => {
+          const first = firsts.at(index);
+          const last = element.getBoundingClientRect();
+          const dX = first.left - last.left;
+          const dY = first.top - last.top;
+          const dW = first.width / last.width;
+          const dH = first.height / last.height;
+          const transform = `translate(${dX}px, ${dY}px) scale(${dW}, ${dH})`;
+
+          element.animate(
+            [
+              { transformOrigin: "top left", transform },
+              { transformOrigin: "top left", transform: "none" }
+            ],
+            { duration: 200, easing: "ease-in-out" }
+          );
+        });
+      }
+
+      function doTransition(elements, mutateDom) {
+        if (prefersReducedMotion()) {
+          mutateDom();
+        } else if (!document.startViewTransition) {
+          flip(elements, mutateDom);
+        } else {
+          elements.forEach((el, index) =>
+            el.style.setProperty("view-transition-name", `bofa-${index}`)
+          );
+          document.startViewTransition(() => mutateDom());
+        }
+      }
+
+      customElements.define(
+        "list-",
+        class extends HTMLElement {
+          connectedCallback() {
+            this.allItems = this.querySelectorAll("item-");
+            this.addEventListener("click", (e) => {
+              if (e.target.matches("button:first-of-type")) this.handleUp(e);
+              if (e.target.matches("button:last-of-type")) this.handleDown(e);
+            });
+          }
+
+          handleUp(e) {
+            const item = e.target.closest("item-");
+            doTransition([...this.allItems], () => {
+              this.insertBefore(item, item.previousElementSibling);
+            });
+          }
+
+          handleDown(e) {
+            const item = e.target.closest("item-");
+            const next = item.nextElementSibling;
+            doTransition([...this.allItems], () => {
+              this.insertBefore(
+                item,
+                next ? next.nextElementSibling : this.querySelector("item-")
+              );
+            });
+          }
+        }
+      );
+    </script>
+
+    <style>
+      @layer nothing-to-see-here {
+        html {
+          font-family: system-ui;
+          color-scheme: dark light;
+        }
+
+        list- {
+          display: grid;
+          gap: 4px;
+        }
+
+        item- {
+          border: 1px solid;
+          padding: 1rem;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        item- > span {
+          margin-inline-end: auto;
+        }
+      }
+    </style>
+  </body>
+</html>
